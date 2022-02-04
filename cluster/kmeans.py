@@ -55,9 +55,9 @@ class KMeans:
         iteration = 0
 
         while iteration <= 100:
+
             distances = cdist(centroids,mat,self.metric) #compute a distance matrix where ij represents the distance between row vector i (from centers) and row vector j (from mat)
             assignments = self._assign(distances)
-
             centroids_new = self._compute_centroids(mat, assignments)
 
             iteration += 1
@@ -69,18 +69,37 @@ class KMeans:
 
         return assignments
 
-
-
-
-
-
     def _initialize(self, mat: np.ndarray) -> np.ndarray:
+        """
+        yields a np.ndarray containing k randomly selected observations assigned to be initial centroids.
+
+            inputs:
+                mat: np.ndarray
+                    A 2D matrix where the rows are observations and columns are features
+
+            outputs:
+                centroids: np.ndarray
+                    A 2D matrix where the rows are centroids and the columns are features
+        """
+
         observation_indices = np.linspace(0,mat.shape[0]-1,mat.shape[0]) #create a np.ndarray to hold indices of observations
         centroid_indices = np.random.choice(observations, size = self.k, replace = False) #randomly pick three observation indices without replacement
         centroids = mat[center_indices,:]
         return centroids
 
     def _assign(self, distances: np.ndarray) -> np.ndarray:
+        """
+        assigns observations to clusters based on distance.
+
+        inputs:
+            distances: np.ndarray
+                A 2D matrix where ij represents the distance between centroid i and observation j
+
+        outputs:
+            assignments: np.ndarray
+                A 1D array where element i represents the cluster assignment of the ith observation
+        """
+
         assignments = np.zeros(distances.shape[1]) #create an np.ndarray to hold assignments for observations
         for column_index in range(0,distances.shape[1]): #determine which cluster an assignment belongs to based on distance to center
             assignment = np.argmin(distances[:,column_index])
@@ -89,7 +108,7 @@ class KMeans:
                 assignments[column_index] = assignment
 
             else: #in the unlikely chance that an observation is equidistant two or more centers, assign randomly
-                assignments[column_index] = np.random.choice(np.linspace(0, self.k - 1, self.k))
+                assignments[column_index] = np.random.choice(assignment))
 
         return assignments
 
