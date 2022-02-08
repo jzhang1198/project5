@@ -99,7 +99,7 @@ class KMeans:
                 assignments[column_index] = assignment
 
             else: #in the unlikely chance that an observation is equidistant two or more centers, assign randomly
-                assignments[column_index] = np.random.choice(assignment))
+                assignments[column_index] = np.random.choice(assignment)
 
         return assignments
 
