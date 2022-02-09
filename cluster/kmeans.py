@@ -155,7 +155,7 @@ class KMeans:
             np.ndarray
                 a 1D array with the cluster label for each of the observations in `mat`
         """
-        if set([row for row in mat]) == set([row for row in self._training_set]): #check if the observations are the same as the original training set
+        if set([tuple(row) for row in mat]) == set([tuple(row) for row in self._training_set]): #check if the observations are the same as the original training set
             return self._assignments
 
         else: #if observations are not the same as the training set, compute assignments based on the centroids found in fit method
