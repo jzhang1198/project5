@@ -35,8 +35,9 @@ class Silhouette:
             observation = X[int(i)]
 
             k = y[int(i)] #find k for the observation
-            neighbor_k = np.argsort(cdist([observation],centroids, self.metric)[0])[1] #determine the cluster with centroid closest to observation
-
+            distances = cdist([observation],X, self.metric)[0] #determine the cluster with centroid closest to observation
+            neighbor_k = y[np.argmin([distances[int(i)] if y[int(i)] != k else np.inf for i in observation_indices])]
+            
             cluster = X[[int(index) for index in observation_indices if y[int(index)] == k and index != i]] #get observations in the same cluster as observation
             neighbor_cluster = X[[int(index) for index in observation_indices if y[int(index)] == neighbor_k]] #get observations in the cluster closest to observation
 
