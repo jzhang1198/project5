@@ -20,10 +20,14 @@ class KMeans:
                 the maximum number of iterations before quitting model fit
         """
 
+        if k <= 0 or type(k) != int :
+            raise Exception('k must be an integer greater than zero')
+
         self.k = k
         self.metric = metric
         self.tol = tol
         self.max_iter = max_iter
+
 
     def fit(self, mat: np.ndarray):
         """
@@ -33,6 +37,10 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
+
+        if self.k > mat.shape[0]:
+            raise Exception('Number of observations must be greater than or equal to k')
+
         self._training_set = mat
         centroids_old = self._initialize(mat) #initialize clustering algorithm
         error_old = 0
