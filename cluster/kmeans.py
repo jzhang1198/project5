@@ -33,8 +33,8 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
-
-        centroids_old = self._initialize(mat)
+        self._training_set = mat
+        centroids_old = self._initialize(mat) #initialize clustering algorithm
         error_old = 0
         iteration = 0
 
@@ -46,19 +46,21 @@ class KMeans:
             centroids_new = self._compute_centroids(mat, assignments)
             error_new = self._compute_error(mat, assignments, centroids_new)
 
-            if abs(error_new - error_old) < self.tol:
-                self.error = error_new
-                self.centroids = centroids_new
-                return
+            if abs(error_new - error_old) < self.tol: #check if the centroids have stabilized
+                self._error = error_new
+                self._centroids = centroids_new
+                self._assignments = assignments
+                return self
 
-            else:
+            else: #if not, continue
                 centroids_old = centroids_new
                 error_old = error_new
 
-        self.error = error_old
-        self.centroids = centroids_old
+        self._error = error_old
+        self._centroids = centroids_old
+        self._assignments = assignments
 
-        return
+        return self
 
     def _initialize(self, mat: np.ndarray) -> np.ndarray:
         """
@@ -75,7 +77,7 @@ class KMeans:
 
         observation_indices = np.linspace(0,mat.shape[0]-1,mat.shape[0]) #create a np.ndarray to hold indices of observations
         centroid_indices = np.random.choice(observation_indices, size = self.k, replace = False) #randomly pick three observation indices without replacement
-        centroids = mat[centroid_indices,:]
+        centroids = mat[[int(index) for index in centroid_indices]]
         return centroids
 
     def _assign(self, distances: np.ndarray) -> np.ndarray:
@@ -94,33 +96,50 @@ class KMeans:
         assignments = np.zeros(distances.shape[1]) #create an np.ndarray to hold assignments for observations
         for column_index in range(0,distances.shape[1]): #determine which cluster an assignment belongs to based on distance to center
             assignment = np.argmin(distances[:,column_index])
-
-            if len(assignment) == 1:
-                assignments[column_index] = assignment
-
-            else: #in the unlikely chance that an observation is equidistant two or more centers, assign randomly
-                assignments[column_index] = np.random.choice(assignment)
-
+            assignments[column_index] = assignment
         return assignments
 
     def _compute_centroids(self, mat: np.ndarray, assignments: np.ndarray) -> np.ndarray:
-        centroids = np.zeros((self.k, mat.shape[1]))
+        """
+        computes centroids of clusters.
+
+        inputs:
+            mat: np.ndarray
+                A 2D matrix with rows representing observations
+
+            assignments: np.ndarray
+                A 1D array where element i represents the cluster assignment of the ith observation
+        """
+        centroids = np.zeros((self.k, mat.shape[1])) #generate an empty matrix to hold centroids
 
         for k in range(0,self.k):
-            cluster = mat[np.where(assignments == k)]
-            centroid = np.sum(axis=1) / cluster.shape[0]
-            centroids[k,:] = centroid
-
+            cluster = mat[np.where(assignments == k)] #find observations of the same cluster
+            centroid = np.sum(cluster,axis=0) / cluster.shape[0] #compute cluster centroid
+            centroids[k] = centroid #add to centroids matrix
         return centroids
 
-    def _compute_error(self, mat: np.ndarray, assignments: np.ndarray, centriods: np.ndarray) -> float:
+    def _compute_error(self, mat: np.ndarray, assignments: np.ndarray, centroids: np.ndarray) -> float:
+        """
+        computes the mean-squared error of the centroid distances.
+
+        inputs:
+            mat: np.ndarray
+                A 2D matrix with rows representing observations
+
+            assignments: np.ndarray
+                A 1D array where element i represents the cluster assignment of the ith observation
+
+            centroids: np.ndarray
+                A 2D matrix where the ith row represents the centroid for cluster i.
+        """
+
         error = 0
         for observation_index in range(0,mat.shape[0]):
             observation = mat[observation_index]
-            centroid = centroids[assignments[observation_index]]
-            error += np.linalg.norm(observation - centroid) ** 2
+            centroid = centroids[int(assignments[observation_index])] #find the centroid in the same cluster as the observation
+            error += np.linalg.norm(observation - centroid) ** 2 #update error
 
-        mse = error / mat.shape[0]
+        mse = error / mat.shape[0] #compute mse
 
         return mse
 
@@ -136,12 +155,14 @@ class KMeans:
             np.ndarray
                 a 1D array with the cluster label for each of the observations in `mat`
         """
+        if set([row for row in mat]) == set([row for row in self._training_set]): #check if the observations are the same as the original training set
+            return self._assignments
 
-        centroids = self.centroids
-        distances = cdist(centroids,mat,self.metric)
-        assignments = self._assign(distances)
-
-        return assignments
+        else: #if observations are not the same as the training set, compute assignments based on the centroids found in fit method
+            centroids = self._centroids
+            distances = cdist(centroids, mat, self.metric)
+            assignments = self._assign(distances)
+            return assignments
 
     def get_error(self) -> float:
         """
@@ -151,7 +172,7 @@ class KMeans:
             float
                 the squared-mean error of the fit model
         """
-        return self.error
+        return self._error
 
     def get_centroids(self) -> np.ndarray:
         """
@@ -161,4 +182,4 @@ class KMeans:
             np.ndarray
                 a `k x m` 2D matrix representing the cluster centroids of the fit model
         """
-        return self.centroids
+        return self._centroids
