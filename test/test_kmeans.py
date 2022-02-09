@@ -2,6 +2,7 @@
 import pytest
 from cluster import KMeans
 import numpy as np
+from scipy.spatial.distance import cdist
 
 def test_privates():
     """
